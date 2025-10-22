@@ -1,0 +1,15 @@
+CompileFlags:
+  Add:
+    - -I/usr/lib/gcc/x86_64-linux-gnu/14/include
+    - -I/usr/include
+    - -I./src/
+    - -I./test/
+    - -x
+    - c
+    - std=c99
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      - "clang-diagnostic-*"
+      - "clang-analyzer-*"
