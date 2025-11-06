@@ -140,7 +140,9 @@ int64_t bitmap_first_down(bitmap_t *self);
 int64_t bitmap_first_up(bitmap_t *self);
 
 #ifndef bitmap_sizeof
-#define bitmap_sizeof(size, mem_size) (sizeof(bitmap_t) + ((mem_size / size) + 7) / 8)
+// given size
+#define bitmap_sizeof(size, mem_size)                                          \
+        (sizeof(bitmap_t) + ((mem_size / size) + 7) / 8)
 #endif /* ifndef bitmap_size */
 
 #endif /* end of include guard: BITMAP_H */

@@ -7,9 +7,3 @@ CompileFlags:
     - -x
     - c
     - std=c99
-
-Diagnostics:
-  ClangTidy:
-    Add:
-      - "clang-diagnostic-*"
-      - "clang-analyzer-*"

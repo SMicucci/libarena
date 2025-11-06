@@ -2,7 +2,7 @@
 #include "test.h"
 #include <stdio.h>
 
-void bitmap_print(bitmap_t *self);
+static void bitmap_print(bitmap_t *self);
 
 result_t test(void)
 {
@@ -56,7 +56,7 @@ result_t test(void)
         return res;
 }
 
-void bitmap_print(bitmap_t *self)
+static void bitmap_print(bitmap_t *self)
 {
         printf("\x1b[34mbitmap\x1b[0m(\x1b[36m%u\x1b[0m):\n", self->nelem);
         size_t i = 0;

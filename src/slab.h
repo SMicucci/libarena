@@ -2,12 +2,14 @@
 #define SLAB_H
 
 #include "bitmap.h"
+#include <pthread.h>
 #include <stdint.h>
 
 typedef struct slab {
         void *mem;
         uint32_t size;
         bitmap_t *map;
+        pthread_mutex_t mux;
 } slab_t;
 
 slab_t *slab_new(uint32_t size, uint32_t nelem);
