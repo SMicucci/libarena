@@ -16,6 +16,10 @@
 #define PAD 8
 #endif /* ifndef PAD */
 
+#ifndef BIT2BITE
+#define BIT2BITE(n) ((n + 7) / 8)
+#endif /* ifndef BIT2BITE */
+
 // helper to init slab
 // split base logic from implementaion
 static inline void slab_init(slab_t *self, void *mem, bitmap_t *map,
@@ -32,19 +36,15 @@ slab_t *slab_new(uint32_t size, uint32_t nelem)
                 return NULL;
         size_t req;
         //
-        // when undefined nelem use a huge page of 2MB
-        // if declared calculate minimum request
+        // req size: 2MB or minimum request
         //
         if (!nelem) {
                 req = (1 << 21);
         } else {
                 // slab_t + mem + bitmap [ceil(mem/size/8) + 8]
-                req = sizeof(slab_t) + (size_t)nelem * size;
-                req += bitmap_sizeof(size, req);
+                req = sizeof(bitmap_t) + sizeof(slab_t) + (size_t)nelem * size +
+                      BIT2BITE(nelem);
         }
-        nelem = (req - sizeof(slab_t) -
-                 bitmap_sizeof(size, req - sizeof(slab_t)) + size - 1) /
-                size;
         //
         // allocate page
         //
@@ -55,14 +55,22 @@ slab_t *slab_new(uint32_t size, uint32_t nelem)
                 return NULL;
         }
         //
-        // arithmetic ptr utility
+        // optimize #slab to be maximised
+        //
+        nelem = (8 * req - 8 * (sizeof(slab_t) + sizeof(bitmap_t)) - 7) /
+                (8 * size + 1);
+        long occupied = ((nelem + 7) / 8) + nelem * size +
+                        (sizeof(slab_t) + sizeof(bitmap_t));
+        if (nelem % 8 && (req - occupied) == size)
+                nelem++;
+        //
+        // adjust pointer position
         //
         uint8_t *ptr = (uint8_t *)mem;
-        // sizeof bitmap
         slab_t *self = (slab_t *)ptr; /* mem[0]: slab ptr */
         bitmap_t *map = (bitmap_t *)(ptr + sizeof(*self)); /* mem[64]: bitmap */
-        size_t offset = bitmap_init(map, nelem);      /* offset from bitmap */
-        mem = (void *)(ptr + offset + sizeof(*self)); /* mem [64+off]: arena */
+        size_t off = bitmap_init(map, nelem);      /* offset from bitmap */
+        mem = (void *)(ptr + off + sizeof(*self)); /* mem [64+off]: arena */
         //
         // init slab with parsed part of memory
         //
