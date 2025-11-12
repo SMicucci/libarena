@@ -25,6 +25,15 @@
 static inline void slab_init(slab_t *self, void *mem, bitmap_t *map,
                              size_t size);
 
+/**
+ *
+ * CRITICAL SECTION
+ *
+ * - bitmap lookup and write
+ * - memory poisoning
+ *
+ * */
+
 slab_t *slab_new(uint32_t size, uint32_t nelem)
 {
         // minimum size + asan sanitize
@@ -84,10 +93,14 @@ void *slab_alloc(slab_t *self, size_t size)
                 return NULL;
         if (size > PAD + self->size + PAD)
                 return NULL;
+        //<start> CRITICAL SECTION
+        pthread_mutex_lock(&(self->mux));
         int64_t pos = bitmap_first_down(self->map);
         if (pos == -1)
                 return NULL;
         bitmap_up(self->map, pos);
+        pthread_mutex_unlock(&(self->mux));
+        //<end> CRITICAL SECTION
         uint8_t *ptr = self->mem;
         void *res = ptr + (self->size * pos) + PAD;
         __asan_unpoison_memory_region(res, size);
@@ -106,9 +119,13 @@ void slab_free(slab_t *self, void *ptr)
                 ((uint8_t *)self->mem) +
                     (uint64_t)self->size * (uint64_t)self->map->nelem)
                 return;
+        //<start> CRITICAL SECTION
+        pthread_mutex_lock(&(self->mux));
         int64_t pos = ((uint8_t *)ptr - (uint8_t *)self->mem) / self->size;
         bitmap_down(self->map, pos);
         __asan_poison_memory_region(ptr, self->size);
+        pthread_mutex_unlock(&(self->mux));
+        //<end> CRITICAL SECTION
 }
 
 static inline void slab_init(slab_t *self, void *mem, bitmap_t *map,

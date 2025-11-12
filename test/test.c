@@ -26,13 +26,16 @@ int main(void)
                 snprintf(path, sizeof(path), "%s%s", TEST_DIR, name);
                 void *handle = dlopen(path, RTLD_LAZY);
                 if (!handle) {
-                        fprintf(stderr, "> Failed to load %s: %s\n", path, dlerror());
+                        fprintf(stderr, "> Failed to load %s: %s\n", path,
+                                dlerror());
                         continue;
                 }
-                result_t (*test_func)() = (result_t (*)())(intptr_t)dlsym(handle, "test");
+                result_t (*test_func)() =
+                    (result_t (*)())(intptr_t)dlsym(handle, "test");
                 char *err = dlerror();
                 if (err) {
-                        fprintf(stderr, "> Failed to find symbol in %s: %s\n", path, dlerror());
+                        fprintf(stderr, "> Failed to find symbol in %s: %s\n",
+                                path, dlerror());
                         dlclose(handle);
                         continue;
                 }

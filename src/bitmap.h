@@ -18,6 +18,9 @@ typedef struct bitmap {
 } bitmap_t;
 
 #ifndef BITMAP_ERROR
+/** @def BITMAP_ERROR
+ * error returned by bitmap
+ * */
 #define BITMAP_ERROR (-1)
 #endif /* ifndef BITMAP_ERROR */
 
